@@ -1,6 +1,7 @@
 <template>
     <div class="search-box">
         <select v-model="searchKey.oname">
+        <select v-model="searchKey.oname">
             <option value="grp_cod">그룹코드</option>
             <option value="grp_cod_nm">그룹코드명</option>
         </select>

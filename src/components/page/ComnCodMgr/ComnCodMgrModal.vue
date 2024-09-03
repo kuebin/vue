@@ -14,9 +14,16 @@
                                 v-model="comnGrpCodObject.grp_cod"
                                 :readonly="grpCodProp === 'create' ? false : true"
                             />
+                            <input
+                                type="text"
+                                name="grp_cod"
+                                v-model="comnGrpCodObject.grp_cod"
+                                :readonly="grpCodProp === 'create' ? false : true"
+                            />
                         </td>
                         <th>그룹 코드 명 *</th>
                         <td>
+                            <input type="text" name="grp_cod_nm" v-model="comnGrpCodObject.grp_cod_nm" />
                             <input type="text" name="grp_cod_nm" v-model="comnGrpCodObject.grp_cod_nm" />
                         </td>
                     </tr>
@@ -24,19 +31,27 @@
                         <th>코드 설명</th>
                         <td colSpan="3">
                             <input type="text" v-model="comnGrpCodObject.grp_cod_eplti" />
+                            <input type="text" v-model="comnGrpCodObject.grp_cod_eplti" />
                         </td>
                     </tr>
                     <tr>
                         <th>사용 유무 *</th>
                         <td colspan="3">
                             <input type="radio" name="useYn" value="Y" v-model="comnGrpCodObject.use_poa" />
+                            <input type="radio" name="useYn" value="Y" v-model="comnGrpCodObject.use_poa" />
                             사용
+                            <input type="radio" name="useYn" value="N" v-model="comnGrpCodObject.use_poa" />
                             <input type="radio" name="useYn" value="N" v-model="comnGrpCodObject.use_poa" />
                             미사용
                         </td>
                     </tr>
                 </tbody>
                 <div class="btn-group">
+                    <button @click="grpCodProp === 'create' ? insertComnCod() : updateComnCod()">
+                        {{ grpCodProp === "create" ? "등록" : "수정" }}
+                    </button>
+                    <button v-if="grpCodProp !== 'create'" @click="deleteComnCod">삭제</button>
+                    <button @click="modalState.setModalState">닫기</button>
                     <button @click="grpCodProp === 'create' ? insertComnCod() : updateComnCod()">
                         {{ grpCodProp === "create" ? "등록" : "수정" }}
                     </button>

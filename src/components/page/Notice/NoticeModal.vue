@@ -11,6 +11,8 @@
                 <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
                 <div @click="fileDownload">
                     <div v-if="imageUrl">
+                <div @click="fileDownload">
+                    <div v-if="imageUrl">
                         <label>미리보기</label>
                         <img :src="imageUrl"/>
                     </div>

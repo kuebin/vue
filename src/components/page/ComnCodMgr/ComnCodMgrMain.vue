@@ -1,5 +1,6 @@
 <template>
     <button @click="handlerInsertModal">신규등록</button>
+    <button @click="handlerInsertModal">신규등록</button>
     <table>
         <colgroup>
             <col width="20%" />
