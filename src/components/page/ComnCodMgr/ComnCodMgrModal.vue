@@ -3,45 +3,112 @@
         <div class="backdrop">
             <div class="container">
                 <div class="header">그룹 코드 상세</div>
-                <!-- <div >기다려보세요</div> -->
-                <tbody>
+                <div v-if="isLoading">기다려주세요</div>
+                <tbody v-else>
                     <tr>
                         <th>그룹 코드 id *</th>
                         <td>
-                            <input type="text" name="grp_cod" />
+                            <input
+                                type="text"
+                                name="grp_cod"
+                                v-model="comnGrpCodObject.grp_cod"
+                                :readonly="grpCodProp === 'create' ? false : true"
+                            />
                         </td>
                         <th>그룹 코드 명 *</th>
                         <td>
-                            <input type="text" name="grp_cod_nm" />
+                            <input type="text" name="grp_cod_nm" v-model="comnGrpCodObject.grp_cod_nm" />
                         </td>
                     </tr>
                     <tr>
                         <th>코드 설명</th>
                         <td colSpan="3">
-                            <input type="text" />
+                            <input type="text" v-model="comnGrpCodObject.grp_cod_eplti" />
                         </td>
                     </tr>
                     <tr>
                         <th>사용 유무 *</th>
                         <td colspan="3">
-                            <input type="radio" name="useYn" value="Y" />
+                            <input type="radio" name="useYn" value="Y" v-model="comnGrpCodObject.use_poa" />
                             사용
-                            <input type="radio" name="useYn" value="N" />
+                            <input type="radio" name="useYn" value="N" v-model="comnGrpCodObject.use_poa" />
                             미사용
                         </td>
                     </tr>
                 </tbody>
                 <div class="btn-group">
-                    <button>등록</button>
-                    <button>삭제</button>
-                    <button>닫기</button>
+                    <button @click="grpCodProp === 'create' ? insertComnCod() : updateComnCod()">
+                        {{ grpCodProp === "create" ? "등록" : "수정" }}
+                    </button>
+                    <button v-if="grpCodProp !== 'create'" @click="deleteComnCod">삭제</button>
+                    <button @click="modalState.setModalState">닫기</button>
                 </div>
             </div>
         </div>
     </teleport>
 </template>
 
-<script></script>
+<script setup>
+import { useModalStore } from "@/stores/modalState";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import axios from "axios";
+
+const modalState = useModalStore();
+const comnGrpCodObject = ref(new Object());
+const queryClient = useQueryClient();
+const { grpCodProp } = defineProps(["grpCodProp"]);
+
+const comnCodInsert = async () => {
+    await axios.post("/api/system/saveComnGrpCodJson.do", comnGrpCodObject.value);
+};
+
+const postSuccess = () => {
+    modalState.setModalState();
+    queryClient.invalidateQueries({
+        queryKey: ["listComnGrp"]
+    });
+};
+
+const { mutate: insertComnCod } = useMutation({
+    mutationFn: comnCodInsert,
+    onSuccess: postSuccess
+});
+
+const searchDetail = async () => {
+    const result = await axios.post("/api/system/selectComnGrpCod.do", { grp_cod: grpCodProp });
+    return result.data;
+};
+
+const { isLoading } = useQuery({
+    queryKey: ["detail", grpCodProp],
+    queryFn: searchDetail,
+    enabled: grpCodProp !== "create",
+    staleTime: 60 * 1000, // 캐싱, 최초 조회 후 다시 조회할 때 API를 호출하지 않는다.
+    select: (data) => {
+        comnGrpCodObject.value = data.comnGrpCodModel;
+    }
+});
+
+const comnCodUpdate = async () => {
+    await axios.post("/api/system/updateComnGrpCodJson.do", comnGrpCodObject.value);
+};
+
+const { mutate: updateComnCod } = useMutation({
+    mutationFn: comnCodUpdate,
+    onSuccess: postSuccess
+});
+
+const comnCodDelete = async ()=>{
+    await axios.post('/api/system/deleteComnGrpCodJson.do', { grp_cod: grpCodProp })
+}
+
+const { mutate: deleteComnCod } = useMutation({
+    mutationFn: comnCodDelete,
+    onSuccess: postSuccess
+});
+
+
+</script>
 
 <style lang="scss" scoped>
 .backdrop {

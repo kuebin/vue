@@ -1,15 +1,24 @@
 <template>
     <div class="search-box">
-        <select>
+        <select v-model="searchKey.oname">
             <option value="grp_cod">그룹코드</option>
             <option value="grp_cod_nm">그룹코드명</option>
         </select>
-        <input type="text" />
-        <button>검색</button>
+        <input type="text" v-model="searchKey.sname"/>
+        <button @click="searchComnCod">검색</button>
     </div>
 </template>
 
-<script></script>
+<script setup>
+
+    const searchKey = ref({sname: "", oname:"grp_cod"})
+    const injectedValue = inject("providedValue");
+
+    const searchComnCod = ()=>{
+        injectedValue.value = {...searchKey.value};
+    }
+
+</script>
 
 <style lang="scss" scoped>
 .search-box {

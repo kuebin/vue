@@ -4,6 +4,7 @@ import Notice from "@/views/Notice.vue";
 import DashBoard from "@/views/DashBoard.vue";
 import ComnCodMgr from "@/views/ComnCodMgr.vue";
 import ComnCodMgrDetail from "@/components/page/ComnCodMgr/ComnCodMgrDetail.vue";
+import Test from "@/components/page/Test.vue";
 
 const routes = [
     {
@@ -42,6 +43,11 @@ const routes = [
                         component: ComnCodMgrDetail
                     }
                 ]
+            },
+            {
+                path : "test",
+                name : 'test',
+                component: Test
             }
         ]
     }

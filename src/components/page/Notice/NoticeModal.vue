@@ -2,30 +2,176 @@
     <teleport to="body">
         <div class="backdrop">
             <div class="container">
-                <label> 제목 :<input type="text" /> </label>
+                <label> 제목 :<input type="text" v-model="noticeDetail.noti_title"/> </label>
                 <label>
                     내용 :
-                    <input type="text" />
+                    <input type="text" v-model="noticeDetail.noti_content"/>
                 </label>
-                파일 :<input type="file" style="display: none" id="fileInput" />
+                파일 :<input type="file" style="display: none" id="fileInput" @change="handlerFile"/>
                 <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
-                <div>
-                    <div>
+                <div @click="fileDownload">
+                    <div v-if="imageUrl">
                         <label>미리보기</label>
-                        <img />
+                        <img :src="imageUrl"/>
+                    </div>
+                    <div v-else>
+                        <label>파일명</label>
+                        {{ fileData?.name || noticeDetail?.file_name }}
                     </div>
                 </div>
                 <div class="button-box">
-                    <button>저장</button>
-                    <button>삭제</button>
-                    <button>나가기</button>
+                    <button @click=" props.noticeSeq > 0 ? noticeUpdate() : noticeSave()">{{ props.noticeSeq > 0 ? '수정' : '저장' }}</button>
+                    <button v-if="props.noticeSeq > 0" @click="noticeDelete()">삭제</button>
+                    <button @click="modalState.setModalState">나가기</button>
                 </div>
             </div>
         </div>
     </teleport>
 </template>
 
-<script></script>
+<script setup>
+import { useModalStore } from '@/stores/modalState';
+import { useUserInfo } from '@/stores/userInfo';
+import axios from 'axios';
+
+    const props = defineProps(['noticeSeq']);
+    const noticeDetail = ref(
+        new Object({
+            noti_title : "",
+            noti_content : ""
+        })
+    )
+    const modalState = useModalStore();
+    const emit = defineEmits(['modalClose', 'postSuccess'])
+    const userInfo = useUserInfo();
+    const imageUrl = ref("");
+    const fileData = ref()
+
+    const searchDetail = ()=>{
+        axios
+            .post(`/api/board/noticeDetail.do`, {noticeSeq : props.noticeSeq})
+            .then((res)=>{
+                noticeDetail.value = res.data.detailValue;
+                if(noticeDetail.value.file_ext === 'jpg' || noticeDetail.value.file_ext === "gif" || noticeDetail.value.file_ext === 'png'){
+                    fileDownload('preview')
+                }
+            })
+    }
+
+    onMounted(()=>{
+        props.noticeSeq ? searchDetail() : null
+    })
+
+    onUnmounted(()=>{
+        emit("modalClose")
+    })  
+
+    const noticeSave = ()=>{
+
+        const textData = {
+            title : noticeDetail.value.noti_title,
+            content : noticeDetail.value.noti_content, 
+            loginId : userInfo.user.loginId
+        }
+
+        const fileForm = new FormData();
+        if(fileData.value) fileForm.append("file", fileData.value);
+        fileForm.append(
+            'text', 
+            new Blob([JSON.stringify(textData)], {
+                type : "application/json"
+            })
+        );
+
+        axios  
+            .post(`/api/board/noticeFileSaveJson.do`, fileForm)
+            .then((res)=>{
+                if(res.data.result === 'success'){
+                    modalState.setModalState();
+                    emit('postSuccess');
+                }
+            })
+    }
+    
+    const noticeUpdate = ()=>{
+        const textData = {
+            title : noticeDetail.value.noti_title,
+            content : noticeDetail.value.noti_content, 
+            noticeSeq : props.noticeSeq
+        }
+
+        const fileForm = new FormData();
+        if(fileData.value) fileForm.append("file", fileData.value);
+        fileForm.append(
+            'text', 
+            new Blob([JSON.stringify(textData)], {
+                type : "application/json"
+            })
+        );
+
+        axios  
+            .post(`/api/board/noticeFileUpdateJson`, fileForm)
+            .then((res)=>{
+                if(res.data.result === 'success'){
+                    modalState.setModalState();
+                    emit('postSuccess');
+                }
+            })
+    }
+    const noticeDelete = ()=>{
+        axios  
+            .post(`/api/board/noticeDelete.do`, {
+                noticeSeq : props.noticeSeq
+            })
+            .then((res)=>{
+                if(res.data.result === 'success'){
+                    modalState.setModalState();
+                    emit('postSuccess');
+                }
+            })
+    }
+
+    const handlerFile = (e)=>{
+        const fileInfo = e.target.files;
+
+        if(fileInfo.length){
+            const fileInfoSplit = fileInfo[0].name.split(".")
+            const fileExtension = fileInfoSplit[1].toLowerCase();
+            if(fileExtension === 'jpg' || fileExtension === "gif" || fileExtension === 'png'){
+                imageUrl.value = URL.createObjectURL(fileInfo[0])
+            }
+            fileData.value = fileInfo[0]
+        }
+    }
+    
+    const fileDownload = async (flag)=>{
+        let param = new URLSearchParams();
+        param.append('noticeSeq', props.noticeSeq);
+
+        const postAction = {
+            url : '/api/board/noticeDownload.do',
+            method : 'post',
+            data : param, 
+            responseType : 'blob'
+        }
+
+        await axios(postAction).then((res)=>{
+            const url = window.URL.createObjectURL(new Blob([res.data]))
+            if(flag === 'preview') {
+                imageUrl.value = url
+            }else{
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', noticeDetail.value.file_name)
+                document.body.appendChild(link)
+                link.click();
+
+                link.remove();
+            }
+        })
+    }
+
+</script>
 
 <style lang="scss" scoped>
 .backdrop {

@@ -1,13 +1,34 @@
 <template>
     <div class="search-box">
-        <input />
-        <input type="date" />
-        <input type="date" />
-        <button>검색</button>
-        <button>신규등록</button>
+        <input v-model="keyWord"/>
+        <input type="date"  v-model="searchStDate"/>
+        <input type="date" v-model="searchEdDate"/>
+        <button @click="handlerSearch">검색</button>
+        <button @click="modalState.setModalState">신규등록</button>
     </div>
 </template>
-<script></script>
+<script setup>
+import router from '@/router';
+import { useModalStore } from '@/stores/modalState';
+
+
+    const keyWord = ref("");
+    const searchStDate = ref("");
+    const searchEdDate = ref("");
+    const modalState = useModalStore();
+
+    const handlerSearch = ()=>{
+        const query = [];
+        !keyWord.value || query.push(`searchTitle=${keyWord.value}`)
+        !searchStDate.value || query.push(`searchStDate=${searchStDate.value}`)
+        !searchEdDate.value || query.push(`searchEdDate=${searchEdDate.value}`)
+
+        const queryString = query.length > 0 ? `?${query.join("&")}` : "";
+
+        router.push(queryString);
+    }
+
+</script>
 
 <style lang="scss" scoped>
 .search-box {
