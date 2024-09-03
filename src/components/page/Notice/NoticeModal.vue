@@ -9,8 +9,8 @@
                 </label>
                 파일 :<input type="file" style="display: none" id="fileInput" @change="handlerFile"/>
                 <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
-                <div @click="fileDownload">
-                    <div v-if="imageUrl">
+                <div @click="fileDownload"></div>
+                    <div v-if="imageUrl"></div>
                 <div @click="fileDownload">
                     <div v-if="imageUrl">
                         <label>미리보기</label>
