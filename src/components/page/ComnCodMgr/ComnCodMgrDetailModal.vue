@@ -3,54 +3,132 @@
         <div class="backdrop">
             <div class="container">
                 <div class="header">상세 코드 관리</div>
-                <tbody>
+                <tbody v-if="!isLoading">
                     <tr>
                         <th>그룹 코드 id *</th>
                         <td>
-                            <input type="text" readonly />
+                            <!--vmodel대신에 :value를 사용한 이유
+                                v-model : 양방향 바인딩
+                                value로 강제로 넣은 이유 : 데이터 안바뀌고 강제로 넣음
+                            -->
+                            <input type="text" readonly :value="props.grpCod" />
                         </td>
                         <th>그룹 코드 명 *</th>
                         <td>
-                            <input type="text" readonly />
+                            <input type="text" readonly :value="props.grpCodNm" />
                         </td>
                     </tr>
                     <tr>
                         <th>상세 코드 id *</th>
                         <td>
-                            <input type="text" />
+                            <input type="text" v-model="detailObject.dtl_cod" :readonly="props.detailProp !== 'create' ? true : false"/>
                         </td>
                         <th>상세 코드 명 *</th>
                         <td>
-                            <input type="text" />
+                            <input type="text" v-model="detailObject.dtl_cod_nm"/>
                         </td>
                     </tr>
                     <tr>
                         <th>코드 설명</th>
                         <td colSpan="3">
-                            <input type="text" />
+                            <input type="text" v-model="detailObject.dtl_cod_eplti"/>
                         </td>
                     </tr>
                     <tr>
                         <th>사용 유무 *</th>
                         <td colspan="3">
-                            <input type="radio" name="useYn" value="Y" />
+                            <input type="radio" name="useYn" value="Y" v-model="detailObject.use_poa"/>
                             사용
-                            <input type="radio" name="useYn" value="N" />
+                            <input type="radio" name="useYn" value="N" v-model="detailObject.use_poa"/>
                             미사용
                         </td>
                     </tr>
                 </tbody>
                 <div class="btn-group">
-                    <button>저장</button>
-                    <button>삭제</button>
-                    <button>닫기</button>
+                    <button @click="props.detailProp === 'create' ? comnCodInsert : comnCodUpdate">{{ props.detailProp === 'create' ? '저장' : '수정' }}</button>
+                    <button v-if="props.detailProp !== 'create'" @click="comnCodDelete">삭제</button>
+                    <button @click="modalState.setModalState">닫기</button>
                 </div>
             </div>
         </div>
     </teleport>
 </template>
 
-<script></script>
+<script setup>
+import { useModalStore } from "@/stores/modalState";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import axios from "axios";
+
+    const modalState = useModalStore();
+    const props = defineProps(["grpCodNm", "grpCod", "detailProp"]);
+    const detailObject = ref(new Object());
+    const queryClient = useQueryClient();
+
+    const detailInsert = async ()=>{
+        await axios.post(`/api/system/saveComnDtlCodJson.do`, {
+            dtl_grp_cod : props.grpCod,
+            ...detailObject.value
+        });
+    }
+
+    const apiSuccess = ()=>{
+        modalState.setModalState();
+        queryClient.invalidateQueries({
+            queryKey : ["detailList"]
+        })
+    }
+
+    const { mutate : comnCodInsert } = useMutation({
+        mutationFn : detailInsert,
+        onSuccess : apiSuccess
+    })
+
+    const detailUpdate = async ()=>{
+        await axios.post(`/api/system/updateComnDtlCodJson.do`, {
+            dtl_grp_cod : props.grpCod,
+            ...detailObject.value
+        });
+    }
+
+    const { mutate : comnCodUpdate } = useMutation({
+        mutationFn : detailUpdate,
+        onSuccess : apiSuccess
+    })
+
+    const searchDetail = async ()=>{
+        const result = await axios.post(`/api/system/selectComnDtlCod.do`, {
+            grp_cod : props.grpCod,
+            dtl_cod : props.detailProp
+        })
+
+        return result.data;
+    }
+    
+    const { isLoading } = useQuery({
+        queryKey: ["detail", props.detailProp],
+        queryFn: searchDetail,
+        enabled: props.detailProp !== 'create',
+        staleTime: 60 * 1000,
+        select: (data) => {
+            detailObject.value = data.comnDtlCodModel
+        }
+    })
+    
+    const detailDelete = async ()=>{
+        const result = await axios.post(`/api/system/deleteComnDtlCodJson.do`, {
+            dtl_grp_cod : props.grpCod,
+            dtl_cod : props.detailProp
+        })
+
+        return result.data;
+    }
+    const { mutate : comnCodDelete } = useMutation({
+        mutationFn : detailDelete,
+        onSuccess : apiSuccess
+    })
+
+
+</script>
 
 <style lang="scss" scoped>
 .backdrop {

@@ -29,7 +29,7 @@
                 </tr>
             </template>
             <template v-else>
-                <tr v-for="comnGrp in listComnGrp.listComnGrpCod" :key="comnGrp.grp_cod">
+                <tr v-for="comnGrp in listComnGrp.listComnGrpCod" :key="comnGrp.grp_cod" @click="routerNavi(comnGrp.grp_cod, comnGrp.grp_cod_nm)">
                     <td>{{ comnGrp.grp_cod }}</td>
                     <td>{{ comnGrp.grp_cod_nm }}</td>
                     <td>{{ comnGrp.grp_cod_eplti }}</td>
@@ -65,6 +65,7 @@ const cPage = ref(1);
 const pageSize = ref(5);
 const modalState = useModalStore();
 const grpCodProp = ref();
+const router = useRouter();
 
 const searchList = async () => {
     const result = await axios.post("/api/system/listComnGrpCodJson.do", {
@@ -108,6 +109,13 @@ const handlerUpdateModal = (event, grpCod) => {
     });
 */
 
+const routerNavi = (grpCod, grpCodNm)=>{
+    router.push({
+        name: "comnCodMgrDetail",
+        params: { id : grpCod },
+        state: { nm : grpCodNm }
+    })
+}
 
 </script>
 
